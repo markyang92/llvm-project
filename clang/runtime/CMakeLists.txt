@@ -67,10 +67,21 @@ if(LLVM_BUILD_EXTERNAL_COMPILER_RT AND EXISTS ${COMPILER_RT_SRC_ROOT}/)
   endif()
 
   include(GetClangResourceDir)
-  get_clang_resource_dir(output_resource_dir PREFIX ${LLVM_BINARY_DIR})
+  # In standalone builds, LLVM_BINARY_DIR is the LLVM install tree, not
+  # this build; use CMAKE_BINARY_DIR so output lands in our resource dir.
+  if(CLANG_BUILT_STANDALONE)
+    get_clang_resource_dir(output_resource_dir PREFIX ${CMAKE_BINARY_DIR})
+  else()
+    get_clang_resource_dir(output_resource_dir PREFIX ${LLVM_BINARY_DIR})
+  endif()
   get_clang_resource_dir(install_resource_dir)
+  # llvm-config is a pre-built binary in standalone builds, not a target.
+  set(compiler_rt_llvm_deps clang ${compiler_rt_configure_deps})
+  if(TARGET llvm-config)
+    list(APPEND compiler_rt_llvm_deps llvm-config)
+  endif()
   ExternalProject_Add(compiler-rt
-    DEPENDS llvm-config clang ${compiler_rt_configure_deps}
+    DEPENDS ${compiler_rt_llvm_deps}
     PREFIX ${COMPILER_RT_PREFIX}
     SOURCE_DIR ${COMPILER_RT_SRC_ROOT}
     STAMP_DIR ${STAMP_DIR}
