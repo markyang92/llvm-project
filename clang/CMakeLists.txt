@@ -742,6 +742,14 @@ if (CLANG_ENABLE_BOOTSTRAP)
     LLVM_ENABLE_PROJECTS
     LLVM_ENABLE_RUNTIMES)
 
+  # In standalone builds, bootstrap sub-builds must use the same LLVM as
+  # Stage 1; otherwise find_package(LLVM) may resolve to a system install.
+  if(CLANG_BUILT_STANDALONE)
+    list(APPEND _BOOTSTRAP_DEFAULT_PASSTHROUGH
+      LLVM_DIR
+      LLVM_CMAKE_DIR)
+  endif()
+
   # We don't need to depend on compiler-rt/libcxx if we're building instrumented
   # because the next stage will use the same compiler used to build this stage.
   if(NOT LLVM_BUILD_INSTRUMENTED)
